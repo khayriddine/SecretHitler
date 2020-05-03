@@ -7,6 +7,7 @@ using BackEnd.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Internal;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Routing;
@@ -15,6 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SecretHitlerBackEnd.Hubs;
 
 namespace SecretHitlerBackEnd
 {
@@ -33,12 +35,13 @@ namespace SecretHitlerBackEnd
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder => builder
-                .WithOrigins("*")
+                .WithOrigins("http://localhost:4200")
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials());
-            });
 
+            });
+            services.AddSignalR();
             services.AddDbContext<SecretHitlerContext>(opt => opt.UseMySQL(Configuration.GetConnectionString("SecretHitler")));
             services.AddDbContext<DummyContext>(opt => opt.UseMySQL(Configuration.GetConnectionString("Dummy")));
 
@@ -60,8 +63,11 @@ namespace SecretHitlerBackEnd
                 app.UseHsts();
             }
             app.UseCors("CorsPolicy");
-            app.UseHttpsRedirection();
-
+            //app.UseHttpsRedirection();
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<UserHub>("/hubUsers");
+            });
             app.UseMvc();
         }
     }
