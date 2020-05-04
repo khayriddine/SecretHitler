@@ -14,5 +14,9 @@ namespace SecretHitlerBackEnd.Hubs
             if(msg.To == null)
                 await Clients.All.SendAsync("ReceiveMessage", msg);
         }
+        public async Task Notify()
+        {
+            await Clients.All.SendAsync("ReceiveNotification");
+        }
     }
 }

@@ -17,7 +17,7 @@ namespace BackEnd.Models
         public Status Status { get; set; }
 
         [NotMapped]
-        public virtual ICollection<User> Friends { get; set; }
+        public virtual ICollection<Friend> Friends { get; set; }
         public ICollection<Friendship> Friendships { get; set; }
 
         //public int PlayerId { get; set; }

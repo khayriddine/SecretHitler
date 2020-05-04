@@ -39,6 +39,10 @@ namespace BackEnd.Models
     }
     public enum RelationshipStatus
     {
-        None, Friends
+        None=0, Friends=1, Sending=2,Pending=3
+    }
+    public enum RequestAction
+    {
+        None=0,Send = 1, Accept =2, Decline=3
     }
 }

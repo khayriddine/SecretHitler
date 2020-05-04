@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace BackEnd.Models
 {
-    public class Friendship
+    public class Friend
     {
-        public int FriendshipId { get; set; }
-        public int FriendId { get; set; }
         public int UserId { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string ImagePath { get; set; }
+        public Gender Gender { get; set; }
+        public Status Status { get; set; }
         public RelationshipStatus Relation { get; set; }
-        public User User { get; set; }
     }
 }

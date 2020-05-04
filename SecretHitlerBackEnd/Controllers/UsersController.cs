@@ -46,16 +46,19 @@ namespace SecretHitlerBackEnd.Controllers
             Friendship f1 = new Friendship()
             {
                 UserId = u1.UserId,
-                FriendId = u2.UserId
+                FriendId = u2.UserId,
+                Relation = RelationshipStatus.Sending
             };
             Friendship f2 = new Friendship()
             {
                 UserId = u2.UserId,
-                FriendId = u1.UserId
+                FriendId = u1.UserId,
+                Relation = RelationshipStatus.Pending
             };
 
             _context.Friendships.Add(f1);
             _context.Friendships.Add(f2);
+            
             _context.SaveChanges();
             */
         }
@@ -68,13 +71,18 @@ namespace SecretHitlerBackEnd.Controllers
             
             foreach(var user in users)
             {
-                var friendsId = user.Friendships.Select(fs => fs.FriendId).ToArray();
-                user.Friends = _context.Users.Where(u => friendsId.Contains(u.UserId)).ToList();
-                user.Friendships.Clear();
+                assignFriends(user,user.Friendships.ToList());
             }
             return Ok(users);
         }
-        
+        [HttpGet("id")]
+        public IActionResult GetUserById(int userId)
+        {
+            var user = _context.Users.Include("Friendships").First(u => u.UserId == userId);
+            assignFriends(user, user.Friendships.ToList());
+            return Ok(user);
+        }
+
         [HttpPost("authenticate")]
         public IActionResult Authenticate(UserCredentials userCredentials)
         {
@@ -82,11 +90,86 @@ namespace SecretHitlerBackEnd.Controllers
             var user = _context.Users.Include("Friendships").FirstOrDefault(u =>  u.Name == userCredentials.Name  && u.Password == userCredentials.Password);
             user.Status = Status.Online;
             _context.SaveChanges();
-            var friendsId = user.Friendships.Select(fs => fs.FriendId).ToArray();
-            user.Friends = _context.Users.Where(u => friendsId.Contains(u.UserId)).ToList();
-            user.Friendships.Clear();
             
+            
+            return Ok(assignFriends(user,user.Friendships.ToList()));
+        }
+        [HttpPost("register")]
+        public IActionResult Register(User user)
+        {
+
+            _context.Users.Add(user);
+            _context.SaveChanges();
             return Ok(user);
+        }
+        [HttpGet("request")]
+        public IActionResult FriendResuest(int userId,int friendId,RequestAction choice)
+        {
+            var friendships = _context.Friendships;
+            RelationshipStatus r1, r2;
+            r1 = RelationshipStatus.None; r2 = RelationshipStatus.None;
+            switch (choice)
+            {
+                case RequestAction.Send:
+                {
+                        Friendship f1 = new Friendship()
+                    {
+                        UserId = userId,
+                        FriendId = friendId,
+                        Relation = RelationshipStatus.Sending
+                    };
+                    Friendship f2 = new Friendship()
+                    {
+                        UserId = friendId,
+                        FriendId = userId,
+                        Relation = RelationshipStatus.Pending
+                    };
+                    _context.Friendships.Add(f1);
+                    _context.Friendships.Add(f2);
+                break;
+                }
+                case RequestAction.Accept:
+                {
+                        var f1 = _context.Friendships.First(fs => (fs.UserId == userId && fs.FriendId == friendId));
+                        var f2 = _context.Friendships.First(fs => (fs.UserId == friendId && fs.FriendId == userId));
+                        f1.Relation = RelationshipStatus.Friends;
+                        f2.Relation = RelationshipStatus.Friends;
+                        break;
+                }
+                case RequestAction.Decline:
+                {
+                        var fss = _context.Friendships.Where(fs => ((fs.UserId == userId && fs.FriendId == friendId) || (fs.UserId == friendId && fs.FriendId == userId)));
+                        _context.Friendships.RemoveRange(fss);
+                        break;
+                }
+
+
+            }
+
+
+            _context.SaveChanges();
+            User user = _context.Users.Include("Friendships").First(u => u.UserId == userId);
+            assignFriends(user,user.Friendships.ToList());
+            return Ok(user);
+        }
+
+        private User assignFriends(User user,List<Friendship> fships)
+        {
+            var friendsId = fships.Select(fs => fs.FriendId).ToArray();
+            user.Friends = _context.Users.Where(u => friendsId.Contains(u.UserId)).Select<User, Friend>((u) =>
+                  new Friend()
+                  {
+                      UserId = u.UserId,
+                      Name = u.Name,
+                      Email = u.Email,
+                      Status = u.Status,
+                      Gender = u.Gender,
+                      ImagePath = u.ImagePath,
+                      Relation = ((fships != null)? fships.First(fs => fs.FriendId == u.UserId).Relation : RelationshipStatus.None)
+                  }
+            ).ToList();
+            user.Friendships.Clear();
+            return user;
         }
     }
 }
