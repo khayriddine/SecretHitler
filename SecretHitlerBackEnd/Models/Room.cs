@@ -9,11 +9,20 @@ namespace BackEnd.Models
     {
         public int RoomId { get; set; }
         public string Name { get; set; }
-        public BoardSize BoardSize { get; set; }
         public int NumberOfPlayer { get; set; }
-        public GameAcess GameAcess { get; set; }
+        public int AdminId { get; set; }
+        //public BoardSize BoardSize { get; set; }
+        //public GameAcess GameAcess { get; set; }
 
-        public ICollection<User> UsersJoining { get; set; }
+        public virtual ICollection<User> UsersJoining { get; set; }
 
+        public void Update(Room r)
+        {
+            RoomId = r.RoomId;
+            Name = r.Name;
+            NumberOfPlayer = r.NumberOfPlayer;
+            AdminId = r.AdminId;
+            UsersJoining = r.UsersJoining;
+        }
     }
 }

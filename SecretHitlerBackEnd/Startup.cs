@@ -67,6 +67,7 @@ namespace SecretHitlerBackEnd
             app.UseSignalR(routes =>
             {
                 routes.MapHub<UserHub>("/hubUsers");
+                routes.MapHub<GameHub>("/hubGames");
             });
             app.UseMvc();
         }

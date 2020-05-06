@@ -16,6 +16,7 @@ namespace BackEnd.Repositories
         }
         public DbSet<User> Users { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
+        public DbSet<Room> Rooms { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
 
@@ -23,6 +24,10 @@ namespace BackEnd.Repositories
                 .HasOne<User>(fs => fs.User)
                 .WithMany(u => u.Friendships)
                 .HasForeignKey(fs => fs.UserId);
+
+            modelBuilder.Entity<User>()
+                .HasOne<Room>(u => u.Room)
+                .WithMany(r => r.UsersJoining);
         }
     }
 }

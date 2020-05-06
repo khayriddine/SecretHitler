@@ -15,7 +15,9 @@ namespace BackEnd.Models
         public string ImagePath { get; set; }
         public Gender Gender { get; set; }
         public Status Status { get; set; }
-
+        public int? RoomId { get; set; }
+        [ForeignKey("RoomId")]
+        public virtual Room Room { get; set; }
         [NotMapped]
         public virtual ICollection<Friend> Friends { get; set; }
         public ICollection<Friendship> Friendships { get; set; }

@@ -20,54 +20,58 @@ namespace SecretHitlerBackEnd.Controllers
         public UsersController(SecretHitlerContext context)
         {
             _context = context;
-            /*
-            User u1 = new User()
+            if(_context.Users.Count() == 0)
             {
-                Name = "khayri",
-                Email = "khayribattikh@gmail.com",
-                Password = "123",
-                Gender = Gender.Male,
-                Status = Status.Offline,
-                ImagePath = "none"
-            };
-            User u2 = new User()
-            {
-                Name = "ghassen",
-                Email = "ghaston@gmail.com",
-                Password = "123",
-                Gender = Gender.Male,
-                Status = Status.Offline,
-                ImagePath = "none"
-            };
+                User u1 = new User()
+                {
+                    Name = "khayri",
+                    Email = "khayribattikh@gmail.com",
+                    Password = "123",
+                    Gender = Gender.Male,
+                    Status = Status.Offline,
+                    ImagePath = "none"
+                };
+                User u2 = new User()
+                {
+                    Name = "ghassen",
+                    Email = "ghaston@gmail.com",
+                    Password = "123",
+                    Gender = Gender.Male,
+                    Status = Status.Offline,
+                    ImagePath = "none"
+                };
 
-            _context.Users.Add(u1);
-            _context.Users.Add(u2);
-            _context.SaveChanges();
-            Friendship f1 = new Friendship()
-            {
-                UserId = u1.UserId,
-                FriendId = u2.UserId,
-                Relation = RelationshipStatus.Sending
-            };
-            Friendship f2 = new Friendship()
-            {
-                UserId = u2.UserId,
-                FriendId = u1.UserId,
-                Relation = RelationshipStatus.Pending
-            };
+                _context.Users.Add(u1);
+                _context.Users.Add(u2);
+                _context.SaveChanges();
+                Friendship f1 = new Friendship()
+                {
+                    UserId = u1.UserId,
+                    FriendId = u2.UserId,
+                    Relation = RelationshipStatus.Sending
+                };
+                Friendship f2 = new Friendship()
+                {
+                    UserId = u2.UserId,
+                    FriendId = u1.UserId,
+                    Relation = RelationshipStatus.Pending
+                };
 
-            _context.Friendships.Add(f1);
-            _context.Friendships.Add(f2);
+                _context.Friendships.Add(f1);
+                _context.Friendships.Add(f2);
+
+                _context.SaveChanges();
+            }
+
+
             
-            _context.SaveChanges();
-            */
         }
 
 
         [HttpGet]
         public IActionResult Get()
         {
-            var users = _context.Users.Include("Friendships");
+            var users = _context.Users.Include("Friendships").Include("Room");
             
             foreach(var user in users)
             {
@@ -102,12 +106,18 @@ namespace SecretHitlerBackEnd.Controllers
             _context.SaveChanges();
             return Ok(user);
         }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutUser(int id,User user)
+        {
+            
+            _context.Users.Include(u => u.Room).First(u => u.UserId == id).RoomId = user.RoomId;
+            await _context.SaveChangesAsync();
+            return Ok(_context.Users.Include(u => u.Room).First(u => u.UserId == id));
+        }
         [HttpGet("request")]
         public IActionResult FriendResuest(int userId,int friendId,RequestAction choice)
         {
             var friendships = _context.Friendships;
-            RelationshipStatus r1, r2;
-            r1 = RelationshipStatus.None; r2 = RelationshipStatus.None;
             switch (choice)
             {
                 case RequestAction.Send:
