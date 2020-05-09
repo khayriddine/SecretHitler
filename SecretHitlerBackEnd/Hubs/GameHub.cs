@@ -22,7 +22,25 @@ namespace SecretHitlerBackEnd.Hubs
         {
             await Clients.Client(newPlayerConnectionId).SendAsync("OldPlayerInfos", player);
         }
-        public override async Task OnDisconnectedAsync(System.Exception exception)
+        public async Task SendCards(Card[] cards,string receiver,string sender)
+        {
+            await Clients.Client(receiver).SendAsync("ReceiveCards", cards, sender);
+        }
+        public async Task SendResponse(int response, string receiver)
+        {
+            await Clients.Client(receiver).SendAsync("ReceiveResponse", response);
+        }
+        public async Task GoNextTurn(Game game,string receiver)
+        {
+            await Clients.Client(receiver).SendAsync("GameUpdated", game);
+        }
+
+        public async Task SendSignal(SignalInfo signal)
+        {
+            await Clients.Others.SendAsync("ReceiveSignal", signal);
+        }
+
+        public override async Task OnDisconnectedAsync(System.Exception exception)//GoNextTurn
         {
             await Clients.All.SendAsync("PlayerDisconnect", Context.ConnectionId);
             await base.OnDisconnectedAsync(exception);

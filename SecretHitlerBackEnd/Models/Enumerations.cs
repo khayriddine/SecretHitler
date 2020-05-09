@@ -27,7 +27,8 @@ namespace BackEnd.Models
     }
     public enum GameStatus
     {
-        Idle, Ongoing, Closed
+        //Idle, Ongoing, Closed
+        NotReady = 0,Ready = 1
     }
     public enum GameAcess
     {
@@ -45,4 +46,9 @@ namespace BackEnd.Models
     {
         None=0,Send = 1, Accept =2, Decline=3
     }
+    public enum CardType
+    {
+        Liberal = 0, Fascist = 1
+    }
+
 }

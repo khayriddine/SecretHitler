@@ -13,6 +13,7 @@ namespace BackEnd.Models
         //public PublicRole PublicRole { get; set; }
         public string ConnectionId { get; set; }
         public string Name { get; set; }
+        public dynamic Signal { get; set; }
         //public int GameId { get; set; }
 
     }
