@@ -42,8 +42,9 @@ namespace SecretHitlerBackEnd
 
             });
             services.AddSignalR();
-            services.AddDbContext<SecretHitlerContext>(opt => opt.UseMySQL(Configuration.GetConnectionString("SecretHitler")));
-            services.AddDbContext<DummyContext>(opt => opt.UseMySQL(Configuration.GetConnectionString("Dummy")));
+            services.AddDbContextPool<SecretHitlerContext>(opt => opt.UseMySql(Configuration.GetConnectionString("SecretHitlerRemote")));
+            //services.AddDbContext<SecretHitlerContext>(opt => opt.UseMySql(Configuration.GetConnectionString("SecretHitler")));
+            //services.AddDbContext<DummyContext>(opt => opt.UseMySQL(Configuration.GetConnectionString("Dummy")));
 
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)

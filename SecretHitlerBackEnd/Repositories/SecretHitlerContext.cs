@@ -12,7 +12,7 @@ namespace BackEnd.Repositories
         public SecretHitlerContext(DbContextOptions<SecretHitlerContext> options)
             : base(options)
         {
-            Database.EnsureCreated();
+            //Database.EnsureCreated();
         }
         public DbSet<User> Users { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
