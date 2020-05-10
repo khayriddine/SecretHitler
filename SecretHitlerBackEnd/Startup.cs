@@ -35,7 +35,7 @@ namespace SecretHitlerBackEnd
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder => builder
-                .WithOrigins("http://localhost:4200")
+                .WithOrigins("http://localhost:4200", "http://192.168.1.7:8081", "https://secret-hitler-front.web.app")
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials());
