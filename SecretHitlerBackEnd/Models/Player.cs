@@ -9,12 +9,12 @@ namespace BackEnd.Models
     {
         public int UserId { get; set; }
 
-        //public SecretRole SecretRole { get; set; }
-        //public PublicRole PublicRole { get; set; }
+        public SecretRole SecretRole { get; set; }
+        public string ProfilePicture { get; set; }
         public string ConnectionId { get; set; }
         public string Name { get; set; }
         public dynamic Signal { get; set; }
-        //public int GameId { get; set; }
+        public bool IsDead { get; set; }
 
     }
 }

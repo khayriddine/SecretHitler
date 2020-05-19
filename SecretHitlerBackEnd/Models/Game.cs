@@ -11,6 +11,10 @@ namespace BackEnd.Models
         //public string Name { get; set; }
         //public string Password { get; set; }
         public GameStatus Status { get; set; }
+        public int ElectionFailTracker { get; set; }
+        public int NbreOfPeeks { get; set; }
+        public int NbreOfKills { get; set; }
+        public int NbreOfInvestigation { get; set; }
         //public GameAcess GameAcess { get; set; }
 
         //public int BoardId { get; set; }
