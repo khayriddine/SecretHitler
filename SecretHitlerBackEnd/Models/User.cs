@@ -16,8 +16,6 @@ namespace BackEnd.Models
         public Gender Gender { get; set; }
         public Status Status { get; set; }
         public int? RoomId { get; set; }
-        [ForeignKey("RoomId")]
-        public virtual Room Room { get; set; }
         [NotMapped]
         public virtual ICollection<Friend> Friends { get; set; }
         public ICollection<Friendship> Friendships { get; set; }
@@ -28,7 +26,10 @@ namespace BackEnd.Models
         //
         //public Player Player { get; set; }
         //public Statistics Statistics { get; set; }
-
+        public User ShallowCopy()
+        {
+            return (User)this.MemberwiseClone();
+        }
     }
 
     public class UserCredentials

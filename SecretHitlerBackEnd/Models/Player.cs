@@ -15,6 +15,9 @@ namespace BackEnd.Models
         public string Name { get; set; }
         public dynamic Signal { get; set; }
         public bool IsDead { get; set; }
+        public int RoomId { get; set; }
+        public bool IsDisconnected { get; set; }
+        public int Order { get; set; }
 
     }
 }

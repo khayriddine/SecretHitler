@@ -3,14 +3,16 @@ using System;
 using BackEnd.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SecretHitlerBackEnd.Migrations
 {
     [DbContext(typeof(SecretHitlerContext))]
-    partial class SecretHitlerContextModelSnapshot : ModelSnapshot
+    [Migration("20200603001210_RemoveRoom")]
+    partial class RemoveRoom
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -86,6 +88,8 @@ namespace SecretHitlerBackEnd.Migrations
 
                     b.HasKey("UserId");
 
+                    b.HasIndex("RoomId");
+
                     b.ToTable("Users");
                 });
 
@@ -95,6 +99,13 @@ namespace SecretHitlerBackEnd.Migrations
                         .WithMany("Friendships")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("BackEnd.Models.User", b =>
+                {
+                    b.HasOne("BackEnd.Models.Room")
+                        .WithMany("UsersJoining")
+                        .HasForeignKey("RoomId");
                 });
 #pragma warning restore 612, 618
         }

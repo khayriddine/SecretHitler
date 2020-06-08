@@ -7,6 +7,14 @@ namespace BackEnd.Models
 {
     public class Card
     {
+        public Card()
+        {
+
+        }
+        public Card(CardType c)
+        {
+            CardType = c;
+        }
         public CardType CardType { get; set; }
     }
 }

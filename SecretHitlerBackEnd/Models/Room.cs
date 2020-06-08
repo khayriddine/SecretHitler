@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,8 +14,8 @@ namespace BackEnd.Models
         public int AdminId { get; set; }
         //public BoardSize BoardSize { get; set; }
         //public GameAcess GameAcess { get; set; }
-
-        public virtual ICollection<User> UsersJoining { get; set; }
+        [NotMapped]
+        public List<User> UsersJoining { get; set; }
 
         public void Update(Room r)
         {

@@ -25,9 +25,7 @@ namespace BackEnd.Repositories
                 .WithMany(u => u.Friendships)
                 .HasForeignKey(fs => fs.UserId);
 
-            modelBuilder.Entity<User>()
-                .HasOne<Room>(u => u.Room)
-                .WithMany(r => r.UsersJoining);
         }
+        public DbSet<BackEnd.Models.Notification> Notification { get; set; }
     }
 }

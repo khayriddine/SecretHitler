@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BackEnd.Models;
 using BackEnd.Repositories;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.AspNetCore.SignalR;
+using SecretHitlerBackEnd.Hubs;
 
 namespace SecretHitlerBackEnd.Controllers
 {
@@ -15,10 +18,13 @@ namespace SecretHitlerBackEnd.Controllers
     public class RoomsController : ControllerBase
     {
         private readonly SecretHitlerContext _context;
-
-        public RoomsController(SecretHitlerContext context)
+        private readonly IHubContext<UserHub> _userHub;
+        private IMemoryCache _cache;
+        public RoomsController(SecretHitlerContext context, IHubContext<UserHub> Hub, IMemoryCache cache)
         {
+            _userHub = Hub;
             _context = context;
+            _cache = cache;
             /*
             var user = _context.Users.Find(1);
             var room = _context.Rooms.Find(1);
@@ -29,46 +35,60 @@ namespace SecretHitlerBackEnd.Controllers
 
         // GET: api/Rooms
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Room>>> GetRooms()
+        public ActionResult<IEnumerable<Room>> GetRooms()
         {
-            return await _context.Rooms.Include(r => r.UsersJoining ).ToListAsync();
+            var rooms = getAllRooms();
+            return Ok(rooms);
+        }
+        private List<Room> getAllRooms()
+        {
+            List<Room> rooms;
+            lock (_cache)
+            {
+                
+                if (!_cache.TryGetValue("rooms", out rooms))
+                {
+                    rooms = _context.Rooms.ToList();
+                    _cache.Set("rooms", rooms);
+                }
+                
+            }
+            return rooms;
         }
 
         // GET: api/Rooms/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Room>> GetRoom(int id)
+        public ActionResult<Room> GetRoom(int id)
         {
-            var room = await _context.Rooms.FindAsync(id);
-
+            var rooms = getAllRooms();
+            var room = rooms.Find(r => r.RoomId == id);
             if (room == null)
             {
                 return NotFound();
             }
-
             return room;
         }
 
         // PUT: api/Rooms/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutRoom(int id, Room room)
+        public IActionResult PutRoom(int id, Room room)
         {
             if (id != room.RoomId)
             {
                 return BadRequest();
             }
 
-            var r = _context.Rooms.Find(id);
+            var r =  _context.Rooms.Find(id);
             r.RoomId = r.RoomId;
             r.Name = r.Name;
             r.NumberOfPlayer = r.NumberOfPlayer;
             r.AdminId = r.AdminId;
-            foreach(var user in room.UsersJoining)
-            {
-                _context.Users.Find(user.UserId).Room = r;
-            }
             try
             {
-                await _context.SaveChangesAsync();
+                 _context.SaveChanges();
+                var rooms = _context.Rooms.Include(ro => ro.UsersJoining).ToList();
+                _cache.Set("rooms", rooms);
+                _userHub.Clients.All.SendAsync("Notify", "rooms");
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -87,19 +107,21 @@ namespace SecretHitlerBackEnd.Controllers
 
         // POST: api/Rooms
         [HttpPost]
-        public async Task<ActionResult<Room>> PostRoom(Room room)
+        public ActionResult<Room> PostRoom(Room room)
         {
             _context.Rooms.Add(room);
-            await _context.SaveChangesAsync();
-
+            _context.SaveChanges();
+            var rooms = _context.Rooms.Include(r => r.UsersJoining).ToList();
+            _cache.Set("rooms", rooms);
+            _userHub.Clients.All.SendAsync("Notify", "rooms");
             return CreatedAtAction("GetRoom", new { id = room.RoomId }, room);
         }
 
         // DELETE: api/Rooms/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Room>> DeleteRoom(int id)
+        public ActionResult<Room> DeleteRoom(int id)
         {
-            var room = await _context.Rooms.Include(r => r.UsersJoining).FirstAsync(r => r.RoomId == id);
+            var room = _context.Rooms.Include(r => r.UsersJoining).First(r => r.RoomId == id);
             if (room == null)
             {
                 return NotFound();
@@ -108,10 +130,12 @@ namespace SecretHitlerBackEnd.Controllers
             {
                 user.RoomId = null;
             }
-            await _context.SaveChangesAsync();
+             _context.SaveChanges();
             _context.Rooms.Remove(room);
-            await _context.SaveChangesAsync();
-
+            _context.SaveChanges();
+            var rooms = _context.Rooms.Include(r => r.UsersJoining).ToList();
+            _cache.Set("rooms", rooms);
+            _userHub.Clients.All.SendAsync("Notify", "rooms");
             return room;
         }
 

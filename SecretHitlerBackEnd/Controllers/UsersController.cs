@@ -1,14 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BackEnd.Models;
 using BackEnd.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
+using SecretHitlerBackEnd.Hubs;
+using SecretHitlerBackEnd.InMemory;
 
 namespace SecretHitlerBackEnd.Controllers
 {
@@ -17,8 +23,13 @@ namespace SecretHitlerBackEnd.Controllers
     public class UsersController : ControllerBase
     {
         private readonly SecretHitlerContext _context;
-        public UsersController(SecretHitlerContext context)
+        private readonly IHubContext<UserHub> _userHub;
+        private IMemoryCache _cache;
+        
+        public UsersController(SecretHitlerContext context, IHubContext<UserHub> hub,IMemoryCache cache)
         {
+            _cache = cache;
+            _userHub = hub;
             _context = context;
             if(_context.Users.Count() == 0)
             {
@@ -29,7 +40,7 @@ namespace SecretHitlerBackEnd.Controllers
                     Password = "123",
                     Gender = Gender.Male,
                     Status = Status.Offline,
-                    ImagePath = "none"
+                    ImagePath = "/assets/images/unknown_male.png"
                 };
                 User u2 = new User()
                 {
@@ -38,7 +49,7 @@ namespace SecretHitlerBackEnd.Controllers
                     Password = "123",
                     Gender = Gender.Male,
                     Status = Status.Offline,
-                    ImagePath = "none"
+                    ImagePath = "/assets/images/unknown_male.png"
                 };
 
                 _context.Users.Add(u1);
@@ -64,21 +75,24 @@ namespace SecretHitlerBackEnd.Controllers
             }
 
 
-            
+
         }
 
 
         [HttpGet]
         public IActionResult Get()
         {
-            var users = _context.Users.Include("Friendships").Include("Room");
-            
-            foreach(var user in users)
+            List<User> users;
+            if (!_cache.TryGetValue("users", out users))
             {
-                assignFriends(user,user.Friendships.ToList());
+                users = _context.Users.ToList();
+                _cache.Set("users", users);
             }
             return Ok(users);
         }
+
+
+
         [HttpGet("id")]
         public IActionResult GetUserById(int userId)
         {
@@ -88,14 +102,14 @@ namespace SecretHitlerBackEnd.Controllers
         }
 
         [HttpPost("authenticate")]
-        public IActionResult Authenticate(UserCredentials userCredentials)
+        public  IActionResult Authenticate(UserCredentials userCredentials)
         {
 
             var user = _context.Users.Include("Friendships").FirstOrDefault(u =>  u.Name == userCredentials.Name  && u.Password == userCredentials.Password);
             user.Status = Status.Online;
-            _context.SaveChanges();
-            
-            
+             _context.SaveChanges();
+
+
             return Ok(assignFriends(user,user.Friendships.ToList()));
         }
         [HttpPost("register")]
@@ -107,17 +121,36 @@ namespace SecretHitlerBackEnd.Controllers
             return Ok(user);
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id,User user)
+        public IActionResult PutUser(long id, User user)
         {
-            
-            _context.Users.Include(u => u.Room).First(u => u.UserId == id).RoomId = user.RoomId;
-            await _context.SaveChangesAsync();
-            return Ok(_context.Users.Include(u => u.Room).First(u => u.UserId == id));
+            if (id != user.UserId)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(user).State = EntityState.Modified;
+
+            try
+            {
+                 _context.SaveChanges();
+                //var rooms = _context.Rooms.Include(r => r.UsersJoining).ToList();
+                var users = _context.Users.ToList();
+                _cache.Set("users", users);
+                //_cache.Set("rooms", rooms);
+                _userHub.Clients.All.SendAsync("Notify", "all");
+
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw;
+            }
+
+            return NoContent();
         }
         [HttpGet("request")]
-        public IActionResult FriendResuest(int userId,int friendId,RequestAction choice)
+        public async Task<IActionResult> FriendResuest(int userId,int friendId,RequestAction choice)
         {
-            var friendships = _context.Friendships;
+            var friendships  = await _context.Friendships.ToListAsync();
             switch (choice)
             {
                 case RequestAction.Send:
@@ -157,7 +190,9 @@ namespace SecretHitlerBackEnd.Controllers
             }
 
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+            var users = await _context.Users.ToListAsync();
+            var frds = await _context.Friendships.ToListAsync();
             User user = _context.Users.Include("Friendships").First(u => u.UserId == userId);
             assignFriends(user,user.Friendships.ToList());
             return Ok(user);

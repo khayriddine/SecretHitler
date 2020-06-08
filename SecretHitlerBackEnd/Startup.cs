@@ -32,6 +32,7 @@ namespace SecretHitlerBackEnd
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder => builder
@@ -49,6 +50,7 @@ namespace SecretHitlerBackEnd
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
                 .AddJsonOptions(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+            services.AddMemoryCache();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -69,6 +71,7 @@ namespace SecretHitlerBackEnd
             {
                 routes.MapHub<UserHub>("/hubUsers");
                 routes.MapHub<GameHub>("/hubGames");
+                routes.MapHub<NotificationHub>("/hubNotifications");
             });
             app.UseMvc();
         }
